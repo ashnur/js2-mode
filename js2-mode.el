@@ -11098,9 +11098,10 @@ If HARDCODED-ARRAY-INDEX provided, array index in JSON path is replaced with it.
 ;; punch for so little code.
 
 (defconst js2-possibly-braceless-keywords-re
-  (concat "else[ \t]+if\\|for[ \t]+each\\|"
+  (concat "\\_<\\(?:else[ \t]+if\\|for[ \t]+each\\|"
           (regexp-opt '("catch" "do" "else" "finally" "for" "if"
-                        "try" "while" "with" "let")))
+                        "try" "while" "with" "let"))
+          "\\)\\_>")
   "Regular expression matching keywords that are optionally
 followed by an opening brace.")
 
@@ -11395,16 +11396,11 @@ In particular, return the buffer position of the first `for' kwd."
           (if (save-excursion (skip-chars-backward " \t)")
                               (looking-at ")"))
               (backward-list)
-            (if (looking-at "(")
-                (when (and
-                       (save-excursion
-                         (skip-chars-backward "[ \t\n]")
-                         (and (ignore-errors (beginning-of-thing 'symbol))
-                              (not (looking-at
-                                    (concat (regexp-opt '("catch" "for" "if"
-                                                          "while" "with" "let"))
-                                            "\\_>"))))))
-                  (setq in-elems t))
+            (when (save-excursion
+                    (skip-chars-backward "[ \t\n]")
+                    (not (and
+                          (ignore-errors (beginning-of-thing 'symbol))
+                          (looking-at js2-possibly-braceless-keywords-re))))
               (setq in-elems t)))
           (back-to-indentation)
           (skip-syntax-forward ".-")
